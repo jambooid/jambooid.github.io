@@ -660,7 +660,44 @@ class ContextImpl extends Context {
 
 
 ```csharp
- public Application makeApplication(boolean forceDefaultAppClass,            Instrumentation instrumentation) {        if (mApplication != null) {            return mApplication;        }        Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "makeApplication");        Application app = null;        String appClass = mApplicationInfo.className;        if (forceDefaultAppClass || (appClass == null)) {            appClass = "android.app.Application";        }        try {            java.lang.ClassLoader cl = getClassLoader();            if (!mPackageName.equals("android")) {                Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER,                        "initializeJavaContextClassLoader");                initializeJavaContextClassLoader();                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);            }************************重点******************************            ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);            app = mActivityThread.mInstrumentation.newApplication(                    cl, appClass, appContext);            appContext.setOuterContext(app);************************重点******************************        } catch (Exception e) {            if (!mActivityThread.mInstrumentation.onException(app, e)) {                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);                throw new RuntimeException(                    "Unable to instantiate application " + appClass                    + ": " + e.toString(), e);            }        }        mActivityThread.mAllApplications.add(app);        mApplication = app;       //省略部分代码    }
+ public Application makeApplication(boolean forceDefaultAppClass,
+            Instrumentation instrumentation) {
+        if (mApplication != null) {
+            return mApplication;
+        }
+        Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "makeApplication");
+        Application app = null;
+        String appClass = mApplicationInfo.className;
+        if (forceDefaultAppClass || (appClass == null)) {
+            appClass = "android.app.Application";
+        }
+        try {
+            java.lang.ClassLoader cl = getClassLoader();
+            if (!mPackageName.equals("android")) {
+                Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER,
+                        "initializeJavaContextClassLoader");
+                initializeJavaContextClassLoader();
+                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+            }
+
+************************重点******************************
+            ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);
+            app = mActivityThread.mInstrumentation.newApplication(
+                    cl, appClass, appContext);
+            appContext.setOuterContext(app);
+************************重点******************************
+        } catch (Exception e) {
+            if (!mActivityThread.mInstrumentation.onException(app, e)) {
+                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+                throw new RuntimeException(
+                    "Unable to instantiate application " + appClass
+                    + ": " + e.toString(), e);
+            }
+        }
+        mActivityThread.mAllApplications.add(app);
+        mApplication = app;
+       //省略部分代码
+    }
 ```
 
 看我画重点的部分
@@ -695,7 +732,24 @@ H类其实是一个Handler
 
 
 ```java
-  private class H extends Handler {        //省略部分代码       public void handleMessage(Message msg) {            if (DEBUG_MESSAGES) Slog.v(TAG, ">>> handling: " + codeToString(msg.what));            switch (msg.what) {                case LAUNCH_ACTIVITY: {                    Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "activityStart");                    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;                    r.packageInfo = getPackageInfoNoCheck(                            r.activityInfo.applicationInfo, r.compatInfo);                    handleLaunchActivity(r, null, "LAUNCH_ACTIVITY");                    Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);                } break;            //省略部分代码         }      //省略部分代码}
+  private class H extends Handler {
+        //省略部分代码
+       public void handleMessage(Message msg) {
+            if (DEBUG_MESSAGES) Slog.v(TAG, ">>> handling: " + codeToString(msg.what));
+            switch (msg.what) {
+                case LAUNCH_ACTIVITY: {
+                    Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "activityStart");
+                    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;
+
+                    r.packageInfo = getPackageInfoNoCheck(
+                            r.activityInfo.applicationInfo, r.compatInfo);
+                    handleLaunchActivity(r, null, "LAUNCH_ACTIVITY");
+                    Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+                } break;
+            //省略部分代码
+         }
+      //省略部分代码
+}
 ```
 
 > ***scheduleLaunchActivity()\*** 方法中会根据以上两种参数构造一个 ***ActivityRecord\*** 数据类， ***ActivityThread\*** 内部会为每一个 ***Activity\*** 创建一个 ***ActivityRecord\*** 对象，并使用这些数据对象来管理 ***Activity\*** 。 ***scheduleLaunchActivity()\*** 方法执行完后会调用发送一个Message到H，H类重写了一个 ***handleMessage()\*** ,然后会调用到 ***case LAUNCH_ACTIVITY中\*** ，在里面又调用了 ***handleLaunchActivity(ActivityClientRecord , Intent, String)\***  ，那我们进去 ***handleLaunchActivity\*** 方法内部看个究竟
@@ -703,7 +757,29 @@ H类其实是一个Handler
 
 
 ```csharp
-     //ActiviyThread.java    private void handleLaunchActivity(ActivityClientRecord r, Intent customIntent, String reason) {         //省略部分代码        Activity a = performLaunchActivity(r, customIntent);        if (a != null) {            r.createdConfig = new Configuration(mConfiguration);            reportSizeConfigurations(r);            Bundle oldState = r.state;            handleResumeActivity(r.token, false, r.isForward,                    !r.activity.mFinished && !r.startsNotResumed, r.lastProcessedSeq, reason);            if (!r.activity.mFinished && r.startsNotResumed) {                          performPauseActivityIfNeeded(r, reason);                if (r.isPreHoneycomb()) {                    r.state = oldState;                }            }        } else {             //省略部分代码        }    }
+     //ActiviyThread.java
+    private void handleLaunchActivity(ActivityClientRecord r, Intent customIntent, String reason) {
+         //省略部分代码
+        Activity a = performLaunchActivity(r, customIntent);
+        if (a != null) {
+            r.createdConfig = new Configuration(mConfiguration);
+            reportSizeConfigurations(r);
+            Bundle oldState = r.state;
+            handleResumeActivity(r.token, false, r.isForward,
+                    !r.activity.mFinished && !r.startsNotResumed, r.lastProcessedSeq, reason);
+
+            if (!r.activity.mFinished && r.startsNotResumed) {
+          
+                performPauseActivityIfNeeded(r, reason);
+
+                if (r.isPreHoneycomb()) {
+                    r.state = oldState;
+                }
+            }
+        } else {
+             //省略部分代码
+        }
+    }
 ```
 
 在 ***handleLaunchActivity(ActivityClientRecord , Intent, String)\*** 方法调用 ***performLaunchActivity()\*** 来获取一个Activity，我们猜到其实是 ***performLaunchActivity(ActivityClientRecord , Intent)\*** 方法内部才是真正创建Activity的地方，那我们就来看下源码，代码如下：
@@ -739,7 +815,16 @@ H类其实是一个Handler
 
 
 ```java
-         //ActivityThread.java        public final void scheduleCreateService(IBinder token,                ServiceInfo info, CompatibilityInfo compatInfo, int processState) {            updateProcessState(processState, false);            CreateServiceData s = new CreateServiceData();            s.token = token;            s.info = info;            s.compatInfo = compatInfo;            sendMessage(H.CREATE_SERVICE, s);        }
+         //ActivityThread.java
+        public final void scheduleCreateService(IBinder token,
+                ServiceInfo info, CompatibilityInfo compatInfo, int processState) {
+            updateProcessState(processState, false);
+            CreateServiceData s = new CreateServiceData();
+            s.token = token;
+            s.info = info;
+            s.compatInfo = compatInfo;
+            sendMessage(H.CREATE_SERVICE, s);
+        }
 ```
 
 H类其实是一个Handler
@@ -747,7 +832,20 @@ H类其实是一个Handler
 
 
 ```java
-  private class H extends Handler {        //省略部分代码       public void handleMessage(Message msg) {            if (DEBUG_MESSAGES) Slog.v(TAG, ">>> handling: " + codeToString(msg.what));            switch (msg.what) {                    case CREATE_SERVICE:                    //省略部分代码                    handleCreateService((CreateServiceData)msg.obj);                    //省略部分代码                    break;            //省略部分代码         }      //省略部分代码}
+  private class H extends Handler {
+        //省略部分代码
+       public void handleMessage(Message msg) {
+            if (DEBUG_MESSAGES) Slog.v(TAG, ">>> handling: " + codeToString(msg.what));
+            switch (msg.what) {
+                    case CREATE_SERVICE:
+                    //省略部分代码
+                    handleCreateService((CreateServiceData)msg.obj);
+                    //省略部分代码
+                    break;
+            //省略部分代码
+         }
+      //省略部分代码
+}
 ```
 
 > - 在 ***scheduleCreateService()\*** 方法中，会使用以上两种参数构造一个 ***CreateServiceData\*** 的数据对象， ***ActivityThread\*** 会为其所包含的每一个 ***Service\*** 创建该数据对象，并通过这些对象来管理 ***Service\*** 。
@@ -756,7 +854,32 @@ H类其实是一个Handler
 
 
 ```kotlin
-private void handleCreateService(CreateServiceData data) {************************重点******************************        //省略部分代码        LoadedApk packageInfo = getPackageInfoNoCheck(                data.info.applicationInfo, data.compatInfo);        Service service = null;        try {            java.lang.ClassLoader cl = packageInfo.getClassLoader();            service = (Service) cl.loadClass(data.info.name).newInstance();        } catch (Exception e) {            if (!mInstrumentation.onException(service, e)) {                throw new RuntimeException(                    "Unable to instantiate service " + data.info.name                    + ": " + e.toString(), e);            }        }            //省略部分代码            ContextImpl context = ContextImpl.createAppContext(this, packageInfo);            context.setOuterContext(service);            Application app = packageInfo.makeApplication(false, mInstrumentation);            service.attach(context, this, data.info.name, data.token, app,                    ActivityManagerNative.getDefault());************************重点******************************           //省略部分代码    }
+private void handleCreateService(CreateServiceData data) {
+************************重点******************************
+        //省略部分代码
+        LoadedApk packageInfo = getPackageInfoNoCheck(
+                data.info.applicationInfo, data.compatInfo);
+        Service service = null;
+        try {
+            java.lang.ClassLoader cl = packageInfo.getClassLoader();
+            service = (Service) cl.loadClass(data.info.name).newInstance();
+        } catch (Exception e) {
+            if (!mInstrumentation.onException(service, e)) {
+                throw new RuntimeException(
+                    "Unable to instantiate service " + data.info.name
+                    + ": " + e.toString(), e);
+            }
+        }
+            //省略部分代码
+            ContextImpl context = ContextImpl.createAppContext(this, packageInfo);
+            context.setOuterContext(service);
+
+            Application app = packageInfo.makeApplication(false, mInstrumentation);
+            service.attach(context, this, data.info.name, data.token, app,
+                    ActivityManagerNative.getDefault());
+************************重点******************************
+           //省略部分代码
+    }
 ```
 
 通过阅读源码我们知道
@@ -790,7 +913,9 @@ private void handleCreateService(CreateServiceData data) {**********************
 
 
 ```java
-    public final Application getApplication() {        return mApplication;    }
+    public final Application getApplication() {
+        return mApplication;
+    }
 ```
 
 那么mApplication是什么时候被初始化的那，其实如果你刚刚仔细读过源码就是会知道是在activity的attach里面被初始化的
@@ -798,7 +923,17 @@ private void handleCreateService(CreateServiceData data) {**********************
 
 
 ```dart
-final void attach(Context context, ActivityThread aThread,            Instrumentation instr, IBinder token, int ident,            Application application, Intent intent, ActivityInfo info,            CharSequence title, Activity parent, String id,            NonConfigurationInstances lastNonConfigurationInstances,            Configuration config, String referrer, IVoiceInteractor voiceInteractor,            Window window) {      //省略部分代码      mApplication = application;      //省略部分代码}
+final void attach(Context context, ActivityThread aThread,
+            Instrumentation instr, IBinder token, int ident,
+            Application application, Intent intent, ActivityInfo info,
+            CharSequence title, Activity parent, String id,
+            NonConfigurationInstances lastNonConfigurationInstances,
+            Configuration config, String referrer, IVoiceInteractor voiceInteractor,
+            Window window) {
+      //省略部分代码
+      mApplication = application;
+      //省略部分代码
+}
 ```
 
 那调用attach方法中的第6个参数application,是怎么来的？
@@ -807,7 +942,16 @@ final void attach(Context context, ActivityThread aThread,            Instrument
 
 
 ```cpp
-private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {          //省略部分代码           Application app = r.packageInfo.makeApplication(false, mInstrumentation);         //省略部分代码           activity.attach(appContext, this, getInstrumentation(), r.token,                        r.ident, app, r.intent, r.activityInfo, title, r.parent,                        r.embeddedID, r.lastNonConfigurationInstances, config,                        r.referrer, r.voiceInteractor, window);        //省略部分代码}
+private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
+          //省略部分代码
+           Application app = r.packageInfo.makeApplication(false, mInstrumentation);
+         //省略部分代码
+           activity.attach(appContext, this, getInstrumentation(), r.token,
+                        r.ident, app, r.intent, r.activityInfo, title, r.parent,
+                        r.embeddedID, r.lastNonConfigurationInstances, config,
+                        r.referrer, r.voiceInteractor, window);
+        //省略部分代码
+}
 ```
 
 通过上述代码我们知道app来自LoadedApk的makeApplication()方法里面。
@@ -816,7 +960,42 @@ private Activity performLaunchActivity(ActivityClientRecord r, Intent customInte
 
 
 ```csharp
-    //LoadedApk.java    public Application makeApplication(boolean forceDefaultAppClass,            Instrumentation instrumentation) {        if (mApplication != null) {            return mApplication;        }        //省略部分代码       Application app = null;        String appClass = mApplicationInfo.className;        if (forceDefaultAppClass || (appClass == null)) {            appClass = "android.app.Application";        }        try {            java.lang.ClassLoader cl = getClassLoader();            if (!mPackageName.equals("android")) {                Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER,                        "initializeJavaContextClassLoader");                initializeJavaContextClassLoader();                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);            }            ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);            app = mActivityThread.mInstrumentation.newApplication(                    cl, appClass, appContext);            appContext.setOuterContext(app);        } catch (Exception e) {            if (!mActivityThread.mInstrumentation.onException(app, e)) {                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);                throw new RuntimeException(                    "Unable to instantiate application " + appClass                    + ": " + e.toString(), e);            }        }        mActivityThread.mAllApplications.add(app);        mApplication = app;         //省略部分代码    }
+    //LoadedApk.java
+    public Application makeApplication(boolean forceDefaultAppClass,
+            Instrumentation instrumentation) {
+        if (mApplication != null) {
+            return mApplication;
+        }
+        //省略部分代码
+       Application app = null;
+        String appClass = mApplicationInfo.className;
+        if (forceDefaultAppClass || (appClass == null)) {
+            appClass = "android.app.Application";
+        }
+        try {
+            java.lang.ClassLoader cl = getClassLoader();
+            if (!mPackageName.equals("android")) {
+                Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER,
+                        "initializeJavaContextClassLoader");
+                initializeJavaContextClassLoader();
+                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+            }
+            ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);
+            app = mActivityThread.mInstrumentation.newApplication(
+                    cl, appClass, appContext);
+            appContext.setOuterContext(app);
+        } catch (Exception e) {
+            if (!mActivityThread.mInstrumentation.onException(app, e)) {
+                Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+                throw new RuntimeException(
+                    "Unable to instantiate application " + appClass
+                    + ": " + e.toString(), e);
+            }
+        }
+        mActivityThread.mAllApplications.add(app);
+        mApplication = app; 
+        //省略部分代码
+    }
 ```
 
 通过上述代码，我们知道在LoadedApk的makeApplication里面首先会判断mApplication是否为空，如果不为空直接返回，如果为空则通过反射实例化一个。那我们来看下getAppliationContext()里面的具体实现，首先说明下getApplicationContext()这个方法是ContextWrapper的方法，代码如下：
@@ -824,7 +1003,11 @@ private Activity performLaunchActivity(ActivityClientRecord r, Intent customInte
 
 
 ```java
-   //ContextWrapper.java    @Override    public Context getApplicationContext() {        return mBase.getApplicationContext();    }
+   //ContextWrapper.java
+    @Override
+    public Context getApplicationContext() {
+        return mBase.getApplicationContext();
+    }
 ```
 
 所以我们知道,其实调用的是mBase.getApplicationContext()方法。因为我们知道mBase其实就是ContextImpl所以我们看下ContextImpl里面的具体实现
@@ -832,7 +1015,12 @@ private Activity performLaunchActivity(ActivityClientRecord r, Intent customInte
 
 
 ```java
-    //ReceiverRestrictedContext.java    @Override    public Context getApplicationContext() {        return (mPackageInfo != null) ?                mPackageInfo.getApplication() : mMainThread.getApplication();    }
+    //ReceiverRestrictedContext.java
+    @Override
+    public Context getApplicationContext() {
+        return (mPackageInfo != null) ?
+                mPackageInfo.getApplication() : mMainThread.getApplication();
+    }
 ```
 
 咦，mPackageInfo不是LoadedApk对象吗？那调用 mPackageInfo.getApplication()的源码是：
@@ -840,7 +1028,9 @@ private Activity performLaunchActivity(ActivityClientRecord r, Intent customInte
 
 
 ```cpp
-    Application getApplication() {        return mApplication;    }
+    Application getApplication() {
+        return mApplication;
+    }
 ```
 
 哈哈，大家其实看懂了吧，其实无论是getApplication()还是getApplicationContext()最后其实都是调用的LoadedApk的mApplication。而在一个安装包下LoadedApk是同一个对象，所以getApplication()==getApplicationContext()是true。不知道大家看懂了没。
@@ -852,7 +1042,13 @@ private Activity performLaunchActivity(ActivityClientRecord r, Intent customInte
 
 
 ```java
-publicclassMyReceiverextendsBroadcastReceiver{     @Override     public void onReceive(Context context,Intent intent){                       ApplicationmyApp=(Application)context.getApplicationContext();     }}
+publicclassMyReceiverextendsBroadcastReceiver{
+
+     @Override
+     public void onReceive(Context context,Intent intent){
+                       ApplicationmyApp=(Application)context.getApplicationContext();
+     }
+}
 ```
 
 现在希望大家可以清楚的理解getApplicationContext()与getApplication()。
@@ -876,7 +1072,20 @@ public abstract class Context {    public abstract AssetManager getAssets();    
 
 
 ```java
-class ContextImpl extends Context {     //省略部分代码    private final @NonNull ResourcesManager mResourcesManager;    private final @NonNull Resources mResources;    @Override    public AssetManager getAssets() {        return getResources().getAssets();    }    @Override    public Resources getResources() {        return mResources;    }    //省略部分代码}
+class ContextImpl extends Context {
+     //省略部分代码
+    private final @NonNull ResourcesManager mResourcesManager;
+    private final @NonNull Resources mResources;
+    @Override
+    public AssetManager getAssets() {
+        return getResources().getAssets();
+    }
+    @Override
+    public Resources getResources() {
+        return mResources;
+    }
+    //省略部分代码
+}
 ```
 
 所以我们知道，平时写的各种Context的getAssets()方法和getResources()方法获取的Resources对象就是上面的ContextImpl的成员变量mResources。
@@ -885,7 +1094,51 @@ class ContextImpl extends Context {     //省略部分代码    private final @N
 
 
 ```csharp
-    private ContextImpl(ContextImpl container, ActivityThread mainThread,            LoadedApk packageInfo, IBinder activityToken, UserHandle user, int flags,            Display display, Configuration overrideConfiguration, int createDisplayWithId) {         //省略部分代码        mResourcesManager = ResourcesManager.getInstance();        //省略部分代码        Resources resources = packageInfo.getResources(mainThread);        if (resources != null) {            if (displayId != Display.DEFAULT_DISPLAY                    || overrideConfiguration != null                    || (compatInfo != null && compatInfo.applicationScale                            != resources.getCompatibilityInfo().applicationScale)) {                if (container != null) {                    // This is a nested Context, so it can't be a base Activity context.                    // Just create a regular Resources object associated with the Activity.                    resources = mResourcesManager.getResources(                            activityToken,                            packageInfo.getResDir(),                            packageInfo.getSplitResDirs(),                            packageInfo.getOverlayDirs(),                            packageInfo.getApplicationInfo().sharedLibraryFiles,                            displayId,                            overrideConfiguration,                            compatInfo,                            packageInfo.getClassLoader());                } else {                    // This is not a nested Context, so it must be the root Activity context.                    // All other nested Contexts will inherit the configuration set here.                    resources = mResourcesManager.createBaseActivityResources(                            activityToken,                            packageInfo.getResDir(),                            packageInfo.getSplitResDirs(),                            packageInfo.getOverlayDirs(),                            packageInfo.getApplicationInfo().sharedLibraryFiles,                            displayId,                            overrideConfiguration,                            compatInfo,                            packageInfo.getClassLoader());                }            }        }        mResources = resources;        //省略部分代码    }
+    private ContextImpl(ContextImpl container, ActivityThread mainThread,
+            LoadedApk packageInfo, IBinder activityToken, UserHandle user, int flags,
+            Display display, Configuration overrideConfiguration, int createDisplayWithId) {
+         //省略部分代码
+        mResourcesManager = ResourcesManager.getInstance();
+        //省略部分代码
+        Resources resources = packageInfo.getResources(mainThread);
+        if (resources != null) {
+            if (displayId != Display.DEFAULT_DISPLAY
+                    || overrideConfiguration != null
+                    || (compatInfo != null && compatInfo.applicationScale
+                            != resources.getCompatibilityInfo().applicationScale)) {
+
+                if (container != null) {
+                    // This is a nested Context, so it can't be a base Activity context.
+                    // Just create a regular Resources object associated with the Activity.
+                    resources = mResourcesManager.getResources(
+                            activityToken,
+                            packageInfo.getResDir(),
+                            packageInfo.getSplitResDirs(),
+                            packageInfo.getOverlayDirs(),
+                            packageInfo.getApplicationInfo().sharedLibraryFiles,
+                            displayId,
+                            overrideConfiguration,
+                            compatInfo,
+                            packageInfo.getClassLoader());
+                } else {
+                    // This is not a nested Context, so it must be the root Activity context.
+                    // All other nested Contexts will inherit the configuration set here.
+                    resources = mResourcesManager.createBaseActivityResources(
+                            activityToken,
+                            packageInfo.getResDir(),
+                            packageInfo.getSplitResDirs(),
+                            packageInfo.getOverlayDirs(),
+                            packageInfo.getApplicationInfo().sharedLibraryFiles,
+                            displayId,
+                            overrideConfiguration,
+                            compatInfo,
+                            packageInfo.getClassLoader());
+                }
+            }
+        }
+        mResources = resources;
+        //省略部分代码
+    }
 ```
 
 这里补充下内容
@@ -935,7 +1188,12 @@ class ContextImpl extends Context {     //省略部分代码    private final @N
 
 
 ```cpp
-public class InnerClass {    private OuterClass outer;    public InnerClass(OuterClass outer) {        this.outer = outer;    }}
+public class InnerClass {
+    private OuterClass outer;
+    public InnerClass(OuterClass outer) {
+        this.outer = outer;
+    }
+}
 ```
 
 就是说，创建InnerClass对象时，必须传递进去一个OuterClass的对象，赋值给InnerClass的一个字段，该字段是OuterClass对象的引用。大家想一下GC的原理，如果InnerClass对象没有被标记为垃圾对象，那么outer指向的OutClass对象没有被标记为垃圾对象，这样就会导致Outer也不会是垃圾对象(GCRoot对InnerClass有引用，而InnerClass对OuterClass又由引用)
@@ -958,7 +1216,30 @@ public class InnerClass {    private OuterClass outer;    public InnerClass(Oute
 
 
 ```java
-public class CustomerActivity {    // 省略部分代码void createHandler() {    new Handler() {        @Override public void handleMessage(Message message) {            super.handleMessage(message);        }    }.postDelayed(new Runnable() {        @Override public void run() {            while(true);        }    }, 1000);}      View mBtn = findViewById(R.id.h_button);      mBtn.setOnClickListener(new View.OnClickListener() {               @Override                public void onClick(View v) {                          createHandler();                         nextActivity();                }         })；      // 省略部分代码}
+public class CustomerActivity {
+    // 省略部分代码
+void createHandler() {
+    new Handler() {
+        @Override public void handleMessage(Message message) {
+            super.handleMessage(message);
+        }
+    }.postDelayed(new Runnable() {
+        @Override public void run() {
+            while(true);
+        }
+    }, 1000);
+}
+
+      View mBtn = findViewById(R.id.h_button);
+      mBtn.setOnClickListener(new View.OnClickListener() {
+               @Override 
+               public void onClick(View v) {
+                          createHandler();
+                         nextActivity();
+                }
+         })；
+      // 省略部分代码
+}
 ```
 
 当Appl启动以后，framework会首先帮助我们完成UI线程的消息循环，也就是在UI线程中，Loop、MessageQueue、Message等等这些实例已经由framework帮我们实现了。所有的App主要事件，比如Activity的生命周期方法、Button的点击事件都包含在这个Message里面，这些Message都会加入到MessageQueue中去，所以，UI线程的消息循环贯穿于整个Application生命周期。因此当你在UI线程中生成Handler的实例，就会持有Loop以及MessageQueue的引用。
@@ -974,7 +1255,21 @@ public class CustomerActivity {    // 省略部分代码void createHandler() {  
 
 
 ```java
-//省略部分代码void registerListener() {       SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);       Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ALL);       sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);}View smButton = findViewById(R.id.sm_button);smButton.setOnClickListener(new View.OnClickListener() {    @Override public void onClick(View v) {        registerListener();        nextActivity();    }});//省略部分代码
+//省略部分代码
+void registerListener() {
+       SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+       Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ALL);
+       sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+}
+
+View smButton = findViewById(R.id.sm_button);
+smButton.setOnClickListener(new View.OnClickListener() {
+    @Override public void onClick(View v) {
+        registerListener();
+        nextActivity();
+    }
+});
+//省略部分代码
 ```
 
 通过Context调用的getSystemService获取系统服务，这些服务运行在他们自己的进程执行一系列后台工作或者提供和硬件交互的家口，如果Context对象需要在一个Service内部事件发生时随时受到通知，则需要把自己作为一个监听器注册进去，这样服务就会持有一个Activity。如果开发者忘记了在Activity被销毁钱注销这个监听器，就会导致内存泄露。
