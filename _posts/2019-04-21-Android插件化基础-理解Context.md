@@ -142,7 +142,7 @@ public abstract class Context {
 
 那我们来看下他们的具体子类，在[Context官网的API](https://link.jianshu.com?t=https://developer.android.com/reference/android/content/Context.html)如下:
 
-![](typora-img/context 族谱.png)
+![](typora-img/context-class.png)
 
 官网的API.png
 
@@ -151,7 +151,7 @@ public abstract class Context {
 
 
 
-![](typora-img/context类图.png)
+![](typora-img/context-class-uml.png)
 
 Context类及其子类的继承关系.png
 
@@ -169,7 +169,7 @@ Context类及其子类的继承关系.png
 
 PS:因此在绝对大多数场景下，Activity、Service和Application这三种类型的Context都是可以通用的，因为他们都是ContextWrapper的子类，但是由于如果是启动Activity，弹出Dialog，一般涉及到"界面"的领域，都只能由Activity来启动。因为出于安全的考虑，Android是不允许Activity或者Dialog凭空出现的，一个Activity的启动必须建立在另一个Activity的基础之上，也就是以此形成了返回栈。而Dialog则必须在一个Activity上面弹出(如果是系统的除外)，因此这种情况下我们只能使用Activity类型的Context。整理了一些使用场景的规则，也就是Context的作用域，如下图：
 
-![img](https:////upload-images.jianshu.io/upload_images/5713484-e3f22664fd48e65d.png?imageMogr2/auto-orient/strip|imageView2/2/w/589/format/webp)
+![img](typora-img/webp)
 
 Context作用域.png
 
