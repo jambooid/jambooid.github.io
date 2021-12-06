@@ -142,7 +142,7 @@ public abstract class Context {
 
 那我们来看下他们的具体子类，在[Context官网的API](https://link.jianshu.com?t=https://developer.android.com/reference/android/content/Context.html)如下:
 
-![img](D:\github\blog\jambooid.github.io\_posts\typora-img\context 族谱)
+![](typora-img/context 族谱.png)
 
 官网的API.png
 
@@ -151,7 +151,7 @@ public abstract class Context {
 
 
 
-![img](D:\github\blog\jambooid.github.io\_posts\typora-img\context类图)
+![](typora-img/context类图.png)
 
 Context类及其子类的继承关系.png
 
