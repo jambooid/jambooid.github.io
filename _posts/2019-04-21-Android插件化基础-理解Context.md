@@ -142,7 +142,7 @@ public abstract class Context {
 
 那我们来看下他们的具体子类，在[Context官网的API](https://link.jianshu.com?t=https://developer.android.com/reference/android/content/Context.html)如下:
 
-![img](https:////upload-images.jianshu.io/upload_images/5713484-c78305987da871be.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp)
+![img](D:\github\blog\jambooid.github.io\_posts\typora-img\context 族谱)
 
 官网的API.png
 
@@ -151,7 +151,7 @@ public abstract class Context {
 
 
 
-![img](https:////upload-images.jianshu.io/upload_images/5713484-9fca0569e5631f48.png?imageMogr2/auto-orient/strip|imageView2/2/w/737/format/webp)
+![img](D:\github\blog\jambooid.github.io\_posts\typora-img\context类图)
 
 Context类及其子类的继承关系.png
 
@@ -602,7 +602,7 @@ class ContextImpl extends Context {
 
 也有人说在PackageInfo类的makeApplication()也有，但是我没找到，如果有朋友找到也留言告诉我一声，谢谢！
 
-##### 通过上面方法我们发现貌似大部分ContextImpl的实例创建都是在ActivityThread里面，可见ActivityThread很重要。
+通过上面方法我们发现貌似大部分ContextImpl的实例创建都是在ActivityThread里面，可见ActivityThread很重要。
 
 #### (二)、Application及对应的mBase实例创建过程
 
@@ -706,12 +706,24 @@ class ContextImpl extends Context {
 > - 2、调用 ***Instrumentation的newApplication(ClassLoader ,String, Context)\*** 方法创建一个 ***  Application*** 。
 > - 3、***appContext.setOuterContext(app)\*** 来设置 ***Application的ContextImpl\***
 
-##### 至此完成了 ***Application\*** 及其 ***mBase\*** 的实例创建过程，那我们再来看下 ***Instrumentationd的newApplication(ClassLoader ,String, Context)\*** 方法的源码
+至此完成了 ***Application\*** 及其 ***mBase\*** 的实例创建过程，那我们再来看下 ***Instrumentationd的newApplication(ClassLoader ,String, Context)\*** 方法的源码
 
 
 
 ```java
-  public Application newApplication(ClassLoader cl, String className, Context context)            throws InstantiationException, IllegalAccessException,             ClassNotFoundException {        return newApplication(cl.loadClass(className), context);    }    static public Application newApplication(Class<?> clazz, Context context)            throws InstantiationException, IllegalAccessException,             ClassNotFoundException {        Application app = (Application)clazz.newInstance();        app.attach(context);        return app;    }
+  public Application newApplication(ClassLoader cl, String className, Context context)
+            throws InstantiationException, IllegalAccessException, 
+            ClassNotFoundException {
+        return newApplication(cl.loadClass(className), context);
+    }
+
+    static public Application newApplication(Class<?> clazz, Context context)
+            throws InstantiationException, IllegalAccessException, 
+            ClassNotFoundException {
+        Application app = (Application)clazz.newInstance();
+        app.attach(context);
+        return app;
+    }
 ```
 
 > 我们发现 ***Instrumentationd的newApplication(ClassLoader ,String, Context)\*** 方法内部又调用 ***Instrumentationd\*** 的静态方法 ***newApplication(Class<?> clazz, Context context)\*** 来实现的，在 ***Instrumentationd\*** 的静态方法 ***newApplication(Class<?> clazz, Context context)\*** 里面是调用反射的newInstance()方法来获取的。原来 ***Application\*** 是通过反射来实例化的啊。
@@ -724,7 +736,33 @@ class ContextImpl extends Context {
 
 
 ```java
-        @Override        public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,                ActivityInfo info, Configuration curConfig, Configuration overrideConfig,                CompatibilityInfo compatInfo, String referrer, IVoiceInteractor voiceInteractor,                int procState, Bundle state, PersistableBundle persistentState,                List<ResultInfo> pendingResults, List<ReferrerIntent> pendingNewIntents,                boolean notResumed, boolean isForward, ProfilerInfo profilerInfo) {            updateProcessState(procState, false);            ActivityClientRecord r = new ActivityClientRecord();            r.token = token;            r.ident = ident;            r.intent = intent;            r.referrer = referrer;            r.voiceInteractor = voiceInteractor;            r.activityInfo = info;            r.compatInfo = compatInfo;            r.state = state;            r.persistentState = persistentState;            r.pendingResults = pendingResults;            r.pendingIntents = pendingNewIntents;            r.startsNotResumed = notResumed;            r.isForward = isForward;            r.profilerInfo = profilerInfo;            r.overrideConfig = overrideConfig;            updatePendingConfiguration(curConfig);            sendMessage(H.LAUNCH_ACTIVITY, r);        }
+             @Override
+        public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,
+                ActivityInfo info, Configuration curConfig, Configuration overrideConfig,
+                CompatibilityInfo compatInfo, String referrer, IVoiceInteractor voiceInteractor,
+                int procState, Bundle state, PersistableBundle persistentState,
+                List<ResultInfo> pendingResults, List<ReferrerIntent> pendingNewIntents,
+                boolean notResumed, boolean isForward, ProfilerInfo profilerInfo) {
+            updateProcessState(procState, false);
+            ActivityClientRecord r = new ActivityClientRecord();
+            r.token = token;
+            r.ident = ident;
+            r.intent = intent;
+            r.referrer = referrer;
+            r.voiceInteractor = voiceInteractor;
+            r.activityInfo = info;
+            r.compatInfo = compatInfo;
+            r.state = state;
+            r.persistentState = persistentState;
+            r.pendingResults = pendingResults;
+            r.pendingIntents = pendingNewIntents;
+            r.startsNotResumed = notResumed;
+            r.isForward = isForward;
+            r.profilerInfo = profilerInfo;
+            r.overrideConfig = overrideConfig;
+            updatePendingConfiguration(curConfig);
+            sendMessage(H.LAUNCH_ACTIVITY, r);
+        }
 ```
 
 H类其实是一个Handler
@@ -787,7 +825,39 @@ H类其实是一个Handler
 
 
 ```csharp
-     //ActiviyThread.java private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {        //省略部分代码************************重点******************************        Activity activity = null;        try {            java.lang.ClassLoader cl = r.packageInfo.getClassLoader();            activity = mInstrumentation.newActivity(                    cl, component.getClassName(), r.intent);            StrictMode.incrementExpectedActivityCount(activity.getClass());            r.intent.setExtrasClassLoader(cl);            r.intent.prepareToEnterProcess();            if (r.state != null) {                r.state.setClassLoader(cl);            }        } catch (Exception e) {            if (!mInstrumentation.onException(activity, e)) {                throw new RuntimeException(                    "Unable to instantiate activity " + component                    + ": " + e.toString(), e);            }        }            //省略部分代码            if (activity != null) {                Context appContext = createBaseContextForActivity(r, activity);                //省略部分代码                activity.attach(appContext, this, getInstrumentation(), r.token,                        r.ident, app, r.intent, r.activityInfo, title, r.parent,                        r.embeddedID, r.lastNonConfigurationInstances, config,                        r.referrer, r.voiceInteractor, window);************************重点******************************              //省略部分代码    }
+     //ActiviyThread.java
+ private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
+        //省略部分代码
+************************重点******************************
+        Activity activity = null;
+        try {
+            java.lang.ClassLoader cl = r.packageInfo.getClassLoader();
+            activity = mInstrumentation.newActivity(
+                    cl, component.getClassName(), r.intent);
+            StrictMode.incrementExpectedActivityCount(activity.getClass());
+            r.intent.setExtrasClassLoader(cl);
+            r.intent.prepareToEnterProcess();
+            if (r.state != null) {
+                r.state.setClassLoader(cl);
+            }
+        } catch (Exception e) {
+            if (!mInstrumentation.onException(activity, e)) {
+                throw new RuntimeException(
+                    "Unable to instantiate activity " + component
+                    + ": " + e.toString(), e);
+            }
+        }
+            //省略部分代码
+            if (activity != null) {
+                Context appContext = createBaseContextForActivity(r, activity);
+                //省略部分代码
+                activity.attach(appContext, this, getInstrumentation(), r.token,
+                        r.ident, app, r.intent, r.activityInfo, title, r.parent,
+                        r.embeddedID, r.lastNonConfigurationInstances, config,
+                        r.referrer, r.voiceInteractor, window);
+************************重点******************************
+              //省略部分代码
+    }
 ```
 
 大家看重点区域,通过阅读源码，我们可以获取如下信息：
@@ -801,14 +871,19 @@ H类其实是一个Handler
 
 
 ```java
-   public Activity newActivity(ClassLoader cl, String className,            Intent intent)            throws InstantiationException, IllegalAccessException,            ClassNotFoundException {        return (Activity)cl.loadClass(className).newInstance();    }
+   public Activity newActivity(ClassLoader cl, String className,
+            Intent intent)
+            throws InstantiationException, IllegalAccessException,
+            ClassNotFoundException {
+        return (Activity)cl.loadClass(className).newInstance();
+    }
 ```
 
 其实很简单，就是直接调用放射的newInstance()来获取一个对象。
 
-###### 至此，Activity及对应的mBase实例创建过程已经完成
+至此，Activity及对应的mBase实例创建过程已经完成
 
-## (四)、Service及对应的mBase实例创建过程
+#### (四)、Service及对应的mBase实例创建过程
 
 > 启动 ***Service\*** 时， ***AMS\*** 会通过调用IPC调用到 ***ActivityThread的scheduleCreateService()\*** 方法，该方法也包含两种参数，第一个是 ***ServiceInfo\*** ，这是一个实现了 ***Parcelable接口\*** 的数据类，该对象由Ams创建，并通过IPC传递到 ***ActivityThread\*** 内部；第二种是其他参数。
 
@@ -888,7 +963,7 @@ private void handleCreateService(CreateServiceData data) {
 > - 2、里面调用 ***ContextImpl.createAppContext(ActivityThread, LoadedApk)\*** 方法获取一个 ***ContextImpl\*** 对象，这里和 ***Application一样\*** ，和 ***Activity\*** 不一样。
 > - 3、调用 ***Service的attach(context,ActivityThread, String, IBinder,Application, Object)\*** 方法进行绑定 ***ContextImpl\*** 。
 
-###### 至此完成了Service及其mBase的实例创建过程
+至此完成了Service及其mBase的实例创建过程
 
 #### (五)、这几个Context之间的关系
 
@@ -1064,7 +1139,10 @@ publicclassMyReceiverextendsBroadcastReceiver{
 
 
 ```csharp
-public abstract class Context {    public abstract AssetManager getAssets();    public abstract Resources getResources();}
+public abstract class Context {    
+    public abstract AssetManager getAssets();    
+    public abstract Resources getResources();
+}
 ```
 
 所以我们知道Context的getAssets()和getResources()方法是个抽象类，而我们又知道ContextImpl才是Context的具体实现类，那我们再来看下ContextImpl的源码：
@@ -1147,7 +1225,7 @@ class ContextImpl extends Context {
 > - 2、对一个App而言，一个App对应一个LoadedApk，所以packageInfo.getResources(mainThread);也应该是同一个Resources
 > - 3、由于之前咱们创建的Activity、Service还是Application中的ContextImpl都是中的container=null(至于为什么等于null因为调用的静态create方法里面第一个参数都是null)，所以mResourcesManager也是一份。
 
-##### 综上所述，我们可以看出在设备其他因素不变的情况下我们通过不同的Context实例得到的Resources是同一套资源。
+综上所述，我们可以看出在设备其他因素不变的情况下我们通过不同的Context实例得到的Resources是同一套资源。
 
 关于Resources我后续会专门开个文章去详细讲解。
 
