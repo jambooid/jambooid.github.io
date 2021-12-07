@@ -10,20 +10,7 @@ tags:
     - Tylor
 ---
 
-Android插件化基础的主要内容包括
-
-> - [Android插件化基础1-----加载SD上APK](https://www.jianshu.com/p/ce71e096ebdf)
-> - [Android插件化基础2----理解Context](https://www.jianshu.com/p/e6ce2d03f8f9)
-> - [Android插件化基础3----Android的编译打包APK流程详解](https://www.jianshu.com/p/85c8ce13fcad)
-> - Android插件化基础4----APK安装流程详解(请期待)
-> - Android插件化基础5----Rsources.arsc详解(请期待)
-> - Android插件化基础6----Android的资源系统(请期待)
-> - Android插件化基础7----Activity的启动流程(请期待)
-> - Android插件化基础8----如何启动一个没有注册过的Activity(请期待)
-> - Android插件化基础9----Service的启动流程(请期待)
-> - Android插件化基础10----BroadcastReceiver源码解析(请期待)
-
-为了让大家在后面更好的理解插件化的内容，我们本篇文章围绕Context(基于Android API 24)进行讲解，主要内容如下：
+本篇文章围绕Context(基于Android API 24)进行讲解，主要内容如下：
 
 > - 1、前言
 > - 2、Context的概念
@@ -132,22 +119,13 @@ public abstract class Context {
 上面是官方回答，我的理解是：
 
 > - 从抽象的角度来理解：
->   咱们平时在工作生活中经常会使用到一个词儿——"场景"，一个使用场景就代表用户和我们的app软件交互的过程。比如，你在家里打”农药“就是一个场景；你在宾馆和妹子一起用手机看"小"电影也是一个场景；你在公司用电脑调试你的app也是一个场景。那么Context 就可以抽象的理解为一个场景，每个场景有不同的内容。在程序中，我们可以理解为某对象在程序中所处的"场景"(环境)，一个与系统交互的过程，比如上面你在打”农药“，你的场景就是你的操作界面，和你的手势相关操作的数据与传输。所以Context在加载资源、启动Activity、获取系统服务、创建View等操作都要参与进来。打电话、发短信、玩"农药"等都是有界面的，所以是一类"有界面的"场景，还有一些没有界面的场景，比如你在后台播放歌曲的程序，就是一类"没有界面"的场景。其实一个app就描绘了一个主要的场景，比如淘宝，描绘的是购物的场景；微信是聊天的场景；支付宝，描绘的就是支付的场景，所以说Context其实就是一个"场景"，因为Context是一个"场景"，所以它可以获取这个场景下的所有信息。
+>   "场景"，一个使用场景就代表用户和我们的app软件交互的过程。在程序中，我们可以理解为某对象在程序中所处的"场景"(环境)，一个与系统交互的过程，比如上面你在打”农药“，你的场景就是你的操作界面，和你的手势相关操作的数据与传输。所以Context在加载资源、启动Activity、获取系统服务、创建View等操作都要参与进来。打电话、发短信、玩"农药"等都是有界面的，所以是一类"有界面的"场景，还有一些没有界面的场景，比如你在后台播放歌曲的程序，就是一类"没有界面"的场景。其实一个app就描绘了一个主要的场景，比如淘宝，描绘的是购物的场景；微信是聊天的场景；支付宝，描绘的就是支付的场景，所以说Context其实就是一个"场景"，因为Context是一个"场景"，所以它可以获取这个场景下的所有信息。
 > - 从研发的角度来理解：
 >   Context是一个抽象类，我们通过这个Context可以访问包内的资源(res和assets)和启动其他组件(activity、service、broadcast)以及系统服务(systemService)等。所以Context提供了一个应用程序运行环境，在Context的环境里，应用才可以访问资源，才能和其他组件、服务交互，Context定义了一套基本功能接口，我们可以理解为一套规范，而Activity和Service是实现这套规范的具体实现类(其实内部是ContextImpl统一实现的)。所以可以这样说，Context是维持Android程序中各个组件能够正常工作的一个核心功能类。
 
 上面说了Context是一个抽象类，那它的具体子类都有哪些？我们来一起看一下他的族谱。
 
 ## 三、Context的族谱
-
-那我们来看下他们的具体子类，在[Context官网的API](https://link.jianshu.com?t=https://developer.android.com/reference/android/content/Context.html)如下:
-
-![](typora-img/context-class.png)
-
-官网的API.png
-
-
- 图片太大，加上很多类咱们暂时不需要考虑，整理了下，如下图:
 
 
 
@@ -661,16 +639,8 @@ class ContextImpl extends Context {
 
 ```csharp
  public Application makeApplication(boolean forceDefaultAppClass,
-            Instrumentation instrumentation) {
-        if (mApplication != null) {
-            return mApplication;
-        }
-        Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "makeApplication");
-        Application app = null;
-        String appClass = mApplicationInfo.className;
-        if (forceDefaultAppClass || (appClass == null)) {
-            appClass = "android.app.Application";
-        }
+            Instrumentation instrumentation) {        
+        String appClass = mApplicationInfo.className;       
         try {
             java.lang.ClassLoader cl = getClassLoader();
             if (!mPackageName.equals("android")) {
@@ -679,7 +649,6 @@ class ContextImpl extends Context {
                 initializeJavaContextClassLoader();
                 Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
             }
-
 ************************重点******************************
             ContextImpl appContext = ContextImpl.createAppContext(mActivityThread, this);
             app = mActivityThread.mInstrumentation.newApplication(
@@ -1361,22 +1330,114 @@ smButton.setOnClickListener(new View.OnClickListener() {
 [LeakCanary](https://link.jianshu.com?t=https://github.com/square/leakcanary)
  推荐使用LeakCanary来对内存泄露进行检测。LeakCanary是非常好用的第三方库，用来检测内存泄露，感兴趣的朋友可以去查阅LeakCannary的使用方法，使用它来检测App中内存泄露。
 
-感谢:
- [https://juejin.im/post/5865bfa1128fe10057e57c63](https://link.jianshu.com?t=https://juejin.im/post/5865bfa1128fe10057e57c63)
- [http://blog.csdn.net/mr_liabill/article/details/49872527](https://link.jianshu.com?t=http://blog.csdn.net/mr_liabill/article/details/49872527)
- [http://www.cnblogs.com/xgjblog/p/5462417.html](https://link.jianshu.com?t=http://www.cnblogs.com/xgjblog/p/5462417.html)
- [http://blog.csdn.net/feiduclear_up/article/details/47356289](https://link.jianshu.com?t=http://blog.csdn.net/feiduclear_up/article/details/47356289)
- [http://www.cnblogs.com/android100/p/Android-Context.html](https://link.jianshu.com?t=http://www.cnblogs.com/android100/p/Android-Context.html)
- [https://developer.android.com/reference/android/app/Activity.html](https://link.jianshu.com?t=https://developer.android.com/reference/android/app/Activity.html)
- [http://www.jianshu.com/p/7e78c535f1f5](https://www.jianshu.com/p/7e78c535f1f5)
- [http://www.jianshu.com/p/f24707874b04](https://www.jianshu.com/p/f24707874b04)
- [http://www.jianshu.com/p/94e0f9ab3f1d](https://www.jianshu.com/p/94e0f9ab3f1d)
- [http://www.jianshu.com/p/994cd73bde53](https://www.jianshu.com/p/994cd73bde53)
- [http://blog.csdn.net/lmj623565791/article/details/40481055/](https://link.jianshu.com?t=http://blog.csdn.net/lmj623565791/article/details/40481055/)
- [http://blog.csdn.net/qinjuning/article/details/7310620](https://link.jianshu.com?t=http://blog.csdn.net/qinjuning/article/details/7310620)
- [http://blog.csdn.net/guolin_blog/article/details/47028975](https://link.jianshu.com?t=http://blog.csdn.net/guolin_blog/article/details/47028975)
+## 八 ContentProvider的context获取流程
 
+ContextProvider我们用的就比较少了，内容提供器主要是用于应用间内容共享的。虽然ContentProvider是由系统创建的，但是他本身并不属于Context家族体系内，所以他的context也是从其他获取的。ContentProvider是伴随着应用启动被创建的，来看一张更加详细的流程图：
 
+![img](https:////p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/948d33f6875048acbc809f9c29e2c9d3~tplv-k3u1fbpfcp-watermark.awebp)
+
+我们把目光聚集到ContentProvider的创建上，也就是`installContentProviders`方法。同样，详细的ContentProvider工作流程可以访问[Android中ContentProvider的启动与请求源码流程详解（基于api29）](https://link.juejin.cn?target=https%3A%2F%2Fblog.csdn.net%2Fweixin_43766753%2Farticle%2Fdetails%2F108110605)这篇文章。`installContentProviders`是在handleBindApplication中被调用的，我们看到调用这个方法的地方：
+
+```
+private void handleBindApplication(AppBindData data) {
+    try {
+        // 创建Application
+        app = data.info.makeApplication(data.restrictedBackupMode, null);
+  ...
+        if (!data.restrictedBackupMode) {
+            if (!ArrayUtils.isEmpty(data.providers)) {
+                // 安装ContentProvider
+                installContentProviders(app, data.providers);
+        }
+    }    
+}
+复制代码
+```
+
+可以看到这里传入了application对象，我们继续看下去：
+
+```
+private void installContentProviders(
+        Context context, List<ProviderInfo> providers) {
+    final ArrayList<ContentProviderHolder> results = new ArrayList<>();
+    for (ProviderInfo cpi : providers) {
+        ...
+        ContentProviderHolder cph = installProvider(context, null, cpi,
+                false /*noisy*/, true /*noReleaseNeeded*/, true /*stable*/);
+        ...
+    }
+...
+}
+复制代码
+```
+
+这里调用了installProvider，继续往下看：
+
+```
+private ContentProviderHolder installProvider(Context context,
+        ContentProviderHolder holder, ProviderInfo info,
+        boolean noisy, boolean noReleaseNeeded, boolean stable) {
+    ContentProvider localProvider = null;
+    IContentProvider provider;
+    if (holder == null || holder.provider == null) {
+        ...
+  // 这里c最终是由context构造的
+        Context c = null;
+        ApplicationInfo ai = info.applicationInfo;
+        if (context.getPackageName().equals(ai.packageName)) {
+            c = context;
+        }
+        ...
+        try {
+            // 创建ContentProvider
+            final java.lang.ClassLoader cl = c.getClassLoader();
+            LoadedApk packageInfo = peekPackageInfo(ai.packageName, true);
+            ...
+            localProvider = packageInfo.getAppFactory()
+                    .instantiateProvider(cl, info.name);
+            provider = localProvider.getIContentProvider();
+            ...
+   // 把context设置给ContentProvider
+            localProvider.attachInfo(c, info);
+        } 
+        ...
+    } 
+    ...
+}
+复制代码
+```
+
+这里最重要的一行代码是`localProvider.attachInfo(c, info);`，在这里把context设置给了ContentProvider，我们再深入一点看看：
+
+```
+ContentProvider.class(api29)
+public void attachInfo(Context context, ProviderInfo info) {
+    attachInfo(context, info, false);
+}
+private void attachInfo(Context context, ProviderInfo info, boolean testing) {
+    ...
+    if (mContext == null) {
+        mContext = context;
+        ...
+    }
+    ...
+}
+复制代码
+```
+
+这里确实把context赋值给了ContentProvider的内部变量mContext，这样ContentProvider就可以使用Context了。而这个context正是一开始传进来的Application。
+
+## 九 从源码设计角度看Context
+
+到这里关于Context的知识也讲得差不多了。研究Framework层知识，不能只停留在他是什么，有什么作用即可。Framework层他是一个整体，构成了android这个庞大的体系，还需要看Context，在其中扮演着什么样的角色，解决了什么样的问题。在[window机制](https://link.juejin.cn?target=https%3A%2F%2Fblog.csdn.net%2Fweixin_43766753%2Farticle%2Fdetails%2F108350589)中我讲到window的存在是为了解决屏幕上view的显示逻辑与触摸反馈问题，在[Hanlder机制](https://link.juejin.cn?target=https%3A%2F%2Fblog.csdn.net%2Fweixin_43766753%2Farticle%2Fdetails%2F108968666)中我写到整个android程序都是基于Handler机制来驱动执行的，而Context呢？
+
+Android系统是一个完整的生态，他搭建了一个环境，让各种程序可以运行在上面。而任何一个程序，想要运行在这个环境上，必须得到系统的允许，也就是**软件安装**。安卓与电脑不同的是，他不是任意一个程序就可以直接访问到系统的资源。我们在window上可以写一个java程序，然后直接开启一个文件流就可以读取和修改文件了。而Android没这么简单，他**任意一个程序的运行都必须经过系统的调控**。也就是，即时程序获得允许（安装在手机上了)，程序本身要运行，还得是系统来控制程序运行，程序无法自发地执行在Android环境中。我们通过源码可以知道程序的main方法，仅仅只是开启了线程的Looper循环，而后续的一切，都必须等待AMS来控制。
+
+那应用程序自己硬要执行可不可以？可以，但是没卵用。想要获得系统资源，如启动四大组件、读取布局文件、读写数据库、调用系统柜摄像头等等，都必须要通过Context，而context必须要通过AMS来获取。这就区分了一个程序是一个普通的Java程序，还是android程序。
+
+Context承受的两大重要职责是：身份权限、程序访问系统的接口。一个Java类，如果没有context那么就是一个普通的Java类，而当他获得context那么他就可以称之为一个组件了，因为它获得了访问系统的权限，他不再是一个普通的身份，是属于android“公民”了。而“公民”并不是无法无天，系统也可以通过context来封装以及限制程序的权限。要想弹出一个通知，你必须通过这个api，用户关闭你的通知权限，你就别想通过第二条路来弹出通知了。同时 程序也无需知道底层到底是如何实现，只管调用api即可。四大组件为何称为四大组件，因为他们生来就有了context，特别是activity和service，包括Application。而我们写的一切程序，都必须间接或者直接从其中获取context。
+
+总而言之，context就是负责区分android内外程序的一个机制，限制程序访问系统资源的权限。
 
 作者：隔壁老李头
 链接：https://www.jianshu.com/p/e6ce2d03f8f9
