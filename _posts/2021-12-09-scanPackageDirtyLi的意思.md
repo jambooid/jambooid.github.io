@@ -1,3 +1,17 @@
+---
+layout: post
+title:  "理解ContentProvider原理"
+date:   2016-07-30 20:30:00
+catalog:  true
+tags:
+    - android
+    - 组件系列
+    
+
+---
+
+> 基于Android 6.0源码剖析，本文涉及的相关源码：
+
 在PMS的源码中除了LI结尾的方法，还有其他例如**LIF、LPw、LPr**结尾的函数，下面列举了一部分。
 
 | 后缀 |                            方法名                            |
