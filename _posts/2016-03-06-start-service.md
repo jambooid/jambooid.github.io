@@ -16,7 +16,7 @@ tags:
       - ActiveServices.java
       - ServiceRecord.java
       - ProcessRecord.java
-
+    
     frameworks/base/core/java/android/app/
       - IActivityManager.java
       - ActivityManagerNative.java (内含AMP)
@@ -39,7 +39,7 @@ ActivityManagerService是Android的Java framework的服务框架最重要的服�
 
 下面先看看ActivityManagerService相关的类图：
 
-![activity_manager_classes](/images/android-service/am/activity_manager_classes.png)
+![activity_manager_classes](./images/android-service/am/activity_manager_classes.png)
 
 
 单单就一个ActivityManagerService.java文件就代码超过2万行，我们需要需要一个线，再结合binder的知识，来把我们想要了解的东西串起来，那么本文将从App启动的视角来分析ActivityManagerService。
@@ -241,7 +241,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
             throws TransactionTooLargeException {
         //当调用者是孤立进程，则抛出异常。
         enforceNotIsolatedCaller("startService");
-
+    
         if (service != null && service.hasFileDescriptors() == true) {
             throw new IllegalArgumentException("File descriptors passed in Intent");
         }
@@ -250,7 +250,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         }
         if (DEBUG_SERVICE) Slog.v(TAG_SERVICE,
                 "startService: " + service + " type=" + resolvedType);
-
+    
         synchronized(this) {
             final int callingPid = Binder.getCallingPid(); //调用者pid
             final int callingUid = Binder.getCallingUid(); //调用者uid
@@ -278,7 +278,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
     ComponentName startServiceLocked(IApplicationThread caller, Intent service, String resolvedType,
             int callingPid, int callingUid, String callingPackage, int userId)
             throws TransactionTooLargeException {
-
+    
         final boolean callerFg;
         if (caller != null) {
             final ProcessRecord callerApp = mAm.getRecordForAppLocked(caller);
@@ -304,7 +304,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         }
         NeededUriGrants neededGrants = mAm.checkGrantUriPermissionFromIntentLocked(
                 callingUid, r.packageName, service, service.getFlags(), null, r.userId);
-
+    
         r.lastActivity = SystemClock.uptimeMillis();
         r.startRequested = true;
         r.delayedStop = false;
@@ -385,7 +385,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         if (!whileRestarting && r.restartDelay > 0) {
             return null; //等待延迟重启的过程，则直接返回
         }
-
+    
         // 启动service前，把service从重启服务队列中移除
         if (mRestartingServices.remove(r)) {
             r.resetRestartCounter();
@@ -396,7 +396,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
             getServiceMap(r.userId).mDelayedStartList.remove(r);
             r.delayed = false;
         }
-
+    
         //确保拥有该服务的user已经启动，否则停止；
         if (mAm.mStartedUsers.get(r.userId) == null) {
             String msg = "";
@@ -406,7 +406,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         //服务正在启动，设置package停止状态为false
         AppGlobals.getPackageManager().setPackageStoppedState(
                 r.packageName, false, r.userId);
-
+    
         final boolean isolated = (r.serviceInfo.flags&ServiceInfo.FLAG_ISOLATED_PROCESS) != 0;
         final String procName = r.processName;
         ProcessRecord app;
@@ -428,7 +428,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         } else {
             app = r.isolatedProc;
         }
-
+    
         //对于进程没有启动的情况
         if (app == null) {
             //启动service所要运行的进程 【见流程9.1】
@@ -474,7 +474,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
                 new Configuration(mConfiguration), app.compat,
                 getCommonServicesLocked(app.isolated),
                 mCoreSettingsObserver.getCoreSettingsLocked());
-
+    
         ...
         if (!badApp) {
             try {
@@ -545,11 +545,11 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
     private final void realStartServiceLocked(ServiceRecord r,
             ProcessRecord app, boolean execInFg) throws RemoteException {
         ...
-
+    
         r.app = app;
         r.restartTime = r.lastActivity = SystemClock.uptimeMillis();
         final boolean newService = app.services.add(r);
-
+    
         //发送delay消息【见流程10.1】
         bumpServiceExecutingLocked(r, execInFg, "create");
         mAm.updateLruProcessLocked(app, false, null);
@@ -586,7 +586,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         }
         requestServiceBindingsLocked(r, execInFg);
         updateServiceClientActivitiesLocked(app, null, true);
-
+    
         if (r.startRequested && r.callStart && r.pendingStarts.size() == 0) {
             r.pendingStarts.add(new ServiceRecord.StartItem(r, false, r.makeNextStartId(),
                     null, null));
@@ -745,12 +745,12 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
         //当应用处于后台即将进行GC，而此时被调回到活动状态，则跳过本次gc。
         unscheduleGcIdler();
         LoadedApk packageInfo = getPackageInfoNoCheck(data.info.applicationInfo, data.compatInfo);
-
+    
         java.lang.ClassLoader cl = packageInfo.getClassLoader();
         //通过反射创建目标服务对象
         Service service = (Service) cl.loadClass(data.info.name).newInstance();
         ...
-
+    
         try {
             //创建ContextImpl对象
             ContextImpl context = ContextImpl.createAppContext(this, packageInfo);
@@ -853,7 +853,7 @@ Service启动过程出现ANR，”executing service [发送超时serviceRecord�
         if (N == 0) {
             return;
         }
-
+    
         while (r.pendingStarts.size() > 0) {
             Exception caughtException = null;
             ServiceRecord.StartItem si;
@@ -888,7 +888,7 @@ Service启动过程出现ANR，”executing service [发送超时serviceRecord�
                 ...
                 caughtException = e;
             }
-
+    
             if (caughtException != null) {
                 final boolean inDestroying = mDestroyingServices.contains(r);
                 serviceDoneExecutingLocked(r, inDestroying, inDestroying);
@@ -937,10 +937,10 @@ Service启动过程出现ANR，”executing service [发送超时serviceRecord�
 
 startService的生命周期为onCreate, onStartCommand, onDestroy,流程如下图: [点击查看大图](http://www.gityuan.com/images/ams/service_lifeline.jpg)
 
-![service_lifeline](/images/ams/service_lifeline.jpg)
+![service_lifeline](./images/ams/service_lifeline.jpg)
 
 由上图可见,造成ANR可能的原因有Binder full{step 7, 12}, MessageQueue(step 10), AMS Lock (step 13).
 
 当进程启动Service其所在进程还没有启动时, 需要先启动其目标进程,流程如下图: [点击查看大图](http://www.gityuan.com/images/ams/start_service_process.jpg)
 
-![start_service_process](/images/ams/start_service_process.jpg)
+![start_service_process](./images/ams/start_service_process.jpg)
