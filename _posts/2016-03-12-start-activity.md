@@ -35,7 +35,7 @@ tags:
 
 Activity启动发起后，通过Binder最终交由system进程中的AMS来完成，则启动流程如下图：
 
-![start_activity](./images/activity/start_activity.jpg)
+![start_activity](https://s2.loli.net/2021/12/09/SodUBvseOPfI83K.jpg)
 
 接下来，从源码来说说每个过程。
 
@@ -2088,7 +2088,7 @@ inResumeTopActivity用于保证每次只有一个Activity执行resumeTopActivity
 
 从另一个角度下图来概括：
 
-![start_activity_process](./images/activity/start_activity_process.jpg)
+![start_activity_process](https://s2.loli.net/2021/12/09/WAHRLG8I3a2KPyX.jpg)
 
 
 启动流程：

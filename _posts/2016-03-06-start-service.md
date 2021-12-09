@@ -21,11 +21,11 @@ tags:
       - IActivityManager.java
       - ActivityManagerNative.java (内含AMP)
       - ActivityManager.java
-      
+    
       - IApplicationThread.java
       - ApplicationThreadNative.java (内含ATP)
       - ActivityThread.java (内含ApplicationThread)
-      
+    
       - ContextImpl.java
 
 ## 一、概述
@@ -53,7 +53,7 @@ ActivityManagerService是Android的Java framework的服务框架最重要的服�
 
 该过程如下：
 
-![start_service](/images/android-service/am/start_service.png)
+![start_service](https://s2.loli.net/2021/12/09/4QiUXW5a3tnDbYL.png)
 
 当App通过调用Android API方法startService()或binderService()来生成并启动服务的过程，主要是由ActivityManagerService来完成的。
 
@@ -169,7 +169,7 @@ gDefault为Singleton类型对象，此次采用单例模式，mInstance为IActiv
 
 通过Binder通信过程中，提供了一个IActivityManager服务接口，ActivityManagerProxy类与ActivityManagerService类都实现了IActivityManager接口。ActivityManagerProxy作为binder通信的客户端，ActivityManagerService作为binder通信的服务端，根据[Binder系列](http://gityuan.com/2015/10/31/binder-prepare/)文章，ActivityManagerProxy.startService()最终调用ActivityManagerService.startService()，整个流程图如下：
 
-![Activity_Manager_Service](/images/android-service/am/Activity_Manager_Service.png)
+![Activity_Manager_Service](https://s2.loli.net/2021/12/09/WB2CHdR4Fw31htQ.png)
 
 ### 4. AMP.startService
 
@@ -229,7 +229,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
 
 这里涉及IApplicationThread，那么下面直接把其相关的类图展示如下：
 
-![application_thread_classes](/images/android-service/am/application_thread_classes.png)
+![application_thread_classes](https://s2.loli.net/2021/12/09/7eFX1m3UQH6lVvi.png)
 
 与IActivityManager的binder通信原理一样，`ApplicationThreadProxy`作为binder通信的客户端，`ApplicationThreadNative`作为Binder通信的服务端，其中`ApplicationThread`继承ApplicationThreadNative类，覆写其中的部分方法。
 
@@ -840,7 +840,7 @@ mRemote.transact()是binder通信的客户端发起方法，经过binder驱动�
 
 handleCreateService()执行后便会移除服务启动超时的消息SERVICE_TIMEOUT_MSG。
 Service启动过程出现ANR，”executing service [发送超时serviceRecord信息]”，
-这往往是service的onCreate()回调方法执行时间过长。 
+这往往是service的onCreate()回调方法执行时间过长。
 
 前面小节[10]realStartServiceLocked方法在完成onCreate操作,解析来便是进入onStartCommand方法. 见下文.
 
