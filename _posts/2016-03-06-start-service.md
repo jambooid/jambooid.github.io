@@ -39,7 +39,7 @@ ActivityManagerService是Android的Java framework的服务框架最重要的服�
 
 下面先看看ActivityManagerService相关的类图：
 
-![activity_manager_classes](./images/android-service/am/activity_manager_classes.png)
+![activity_manager_classes](https://s2.loli.net/2021/12/09/IDxUSgPCfHqZBl3.png)
 
 
 单单就一个ActivityManagerService.java文件就代码超过2万行，我们需要需要一个线，再结合binder的知识，来把我们想要了解的东西串起来，那么本文将从App启动的视角来分析ActivityManagerService。
@@ -66,7 +66,7 @@ ActivityManagerService是Android的Java framework的服务框架最重要的服�
 
 点击查看[大图](http://gityuan.com/images/android-service/am/Seq_start_service.png)
 
-![Seq_start_service](/images/android-service/am/Seq_start_service.png)
+![Seq_start_service](https://s2.loli.net/2021/12/09/GKHSv7pbtnzNgkV.png)
 
 图中涉及的首字母缩写：
 
@@ -917,7 +917,7 @@ Service启动过程出现ANR，”executing service [发送超时serviceRecord�
 - **Remote Service进程：**远程服务所在进程，是由Zygote进程孵化而来的用于运行Remote服务的进程。主线程主要负责Activity/Service等组件的生命周期以及UI相关操作都运行在这个线程； 另外，每个App进程中至少会有两个binder线程 ApplicationThread(简称AT)和ActivityManagerProxy（简称AMP），当然还有其他线程，这里不是重点就不提了。
 
 
-![start_service_process](/images/android-service/start_service/start_service_processes.jpg)
+![start_service_process](https://s2.loli.net/2021/12/09/7Okpn9doKbSQBst.jpg)
 
 图中涉及3种IPC通信方式：`Binder`、`Socket`以及`Handler`，在图中分别用3种不同的颜色来代表这3种通信方式。一般来说，同一进程内的线程间通信采用的是 [Handler消息队列机制](http://gityuan.com/2015/12/26/handler-message/)，不同进程间的通信采用的是[binder机制](http://gityuan.com/2015/10/31/binder-prepare/)，另外与Zygote进程通信采用的`Socket`。
 
@@ -937,10 +937,10 @@ Service启动过程出现ANR，”executing service [发送超时serviceRecord�
 
 startService的生命周期为onCreate, onStartCommand, onDestroy,流程如下图: [点击查看大图](http://www.gityuan.com/images/ams/service_lifeline.jpg)
 
-![service_lifeline](./images/ams/service_lifeline.jpg)
+![service_lifeline](https://s2.loli.net/2021/12/09/Z8QWocOEHGpn6zS.jpg)
 
 由上图可见,造成ANR可能的原因有Binder full{step 7, 12}, MessageQueue(step 10), AMS Lock (step 13).
 
 当进程启动Service其所在进程还没有启动时, 需要先启动其目标进程,流程如下图: [点击查看大图](http://www.gityuan.com/images/ams/start_service_process.jpg)
 
-![start_service_process](./images/ams/start_service_process.jpg)
+![start_service_process](https://s2.loli.net/2021/12/09/r3gsyULkBzfnA5c.jpg)
