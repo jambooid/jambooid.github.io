@@ -4,8 +4,7 @@ title:  "Dalvik与ART虚拟机的GC调试日志"
 date:   2015-10-03 22:10:54
 catalog:  true
 tags:
-    - android
-    - 虚拟机
+    - android组件介绍
 
 ---
 

@@ -1,18 +1,16 @@
 ---
 layout: post
-title:  "基于API 30 的Activity启动流程分析"
+title:  "基于API 29 的Activity启动流程分析"
 date:   2016-07-30 20:30:00
 catalog:  true
 tags:
-    - android
-    - 组件系列
+    - android组件源码阅读
+   
     
 
 ---
 
-> 基于Android 6.0源码剖析，本文涉及的相关源码：
-
-# Warning！本文基于API 29，基于 API 30 的Activity启动流程分析已更新，点击：[Activity启动流程？基于Api30的Activity启动流程分析 https://www.jianshu.com/p/b68914037364](https://www.jianshu.com/p/b68914037364)
+Warning！本文基于API 29，基于 API 30 的Activity启动流程分析已更新，点击：[Activity启动流程？基于Api30的Activity启动流程分析 https://www.jianshu.com/p/b68914037364](https://www.jianshu.com/p/b68914037364)
 
 ![img](https://s2.loli.net/2021/12/09/kvLSDoJWmaQezsF.png)
 

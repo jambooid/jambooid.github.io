@@ -4,8 +4,7 @@ title:  "startService启动过程分析"
 date:   2016-03-06 20:12:50
 catalog:  true
 tags:
-    - android
-    - 组件系列
+    - android组件源码阅读
 
 ---
 

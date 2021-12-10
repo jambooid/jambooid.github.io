@@ -4,8 +4,7 @@ title:  "理解ContentProvider原理"
 date:   2016-07-30 20:30:00
 catalog:  true
 tags:
-    - android
-    - 组件系列
+    - android组件源码阅读  
     
 ---
 
@@ -62,8 +61,10 @@ ContentProvider作为Android四大组件之一，并没有Activity那样复杂�
 
 ### 1.3 继承关系图
 
+![get_content_provider](https://s2.loli.net/2021/12/09/xWwzl6hQeA3K8jH.jpg)
 
-![content_provider](https://s2.loli.net/2021/12/09/e4mAuKWE3FMag16.jpg)
+
+
 
 - CPP与CPN是一对Binder通信的C/S两端;
 - ACR(ApplicationContentResolver)继承于ContentResolver, 位于ContextImpl的内部类. ACR的实现往往是通过调用其成员变量mMainThread(数据类型为ActivityThread)来完成;
@@ -96,9 +97,13 @@ ContentProvider作为Android四大组件之一，并没有Activity那样复杂�
 
 点击查看[大图](http://www.gityuan.com/images/ams/get_content_provider.jpg)
 
-![get_content_provider](https://s2.loli.net/2021/12/09/xWwzl6hQeA3K8jH.jpg)
+![content_provider](https://s2.loli.net/2021/12/09/e4mAuKWE3FMag16.jpg)
 
 getContentProviderImpl()过程返回的对象ContentProviderRecord中有成员变量ContentProviderConnection对象, 这个binder服务端.
+
+再来一副另一个角度的图
+
+![img](https://github.com/SusionSuc/AdvancedAndroid/raw/master/framework/picture/ActivityManagerService对于ContentProvider启动请求的处理.png)
 
 ## 二、查询ContentProvider
 
@@ -965,8 +970,11 @@ ActivityManagerNative.getDefault()返回的是AMP，AMP经过binder IPC通信传
 
 query过程更为繁琐,本文就不再介绍,到这里便真正调用到了目标provider的query方法.
 
-
 ##  三、Provider进程
+
+### 3.0 provider的安装
+
+![img](https://s2.loli.net/2021/12/10/61GipglqabtKMsr.png)
 
 ### 3.1 两种场景
 
@@ -1254,3 +1262,9 @@ provider未发布: 请求provider时,provider进程存在但provide的记录对�
 
 最后, 关于provider分为stable provider和unstable provider, 在于[引用计数
 ](http://gityuan.com/2016/05/03/content_provider_release/)的不同，一句话来说就是stable provider建立的是强连接, 客户端进程的与provider进程是存在依赖关系, 即provider进程死亡则会导致客户端进程被杀.
+
+4. 3 provider的总结
+
+   content provider所在进程会在启动时候安装provider，如果没有启动，那么在别的进程请求provider的时候也会走install provider流程，在本地启动后会publish provider到ams. 别的进程会首先查询自身进程有无此provider的缓存Ibinder对象，如果没有，就从ams得到（publish的时候会在ams保存provider信息）
+
+   provider的启动跟activity service类似，会用自身的activityThread类首先attach到ams,ams会调用bindApplication来促使provider所在进程安装provider.

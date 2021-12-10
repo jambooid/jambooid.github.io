@@ -1,11 +1,10 @@
 ---
 layout: post
-title:  "Jvm系列4—类的加载"
+title:  "Jvm系列—类的加载"
 date:   2015-10-25 19:16:10
 catalog:  true
 tags:
-    - java
-    - jvm
+    - android组件介绍
 
 ---
 

@@ -1,11 +1,10 @@
 ---
 layout: post
-title:  "Binder系列10—总结"
+title:  "Binder组件总结"
 date:   2015-11-28 22:22:12
 catalog:  true
 tags:
-    - android
-    - binder
+    - android组件源码阅读
 
 ---
 

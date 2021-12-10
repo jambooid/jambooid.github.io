@@ -4,9 +4,7 @@ title:  "Android系统启动-zygote篇"
 date:   2016-02-13 20:21:40
 catalog:  true
 tags:
-    - android
-    - 系统启动
-
+    - android组件源码阅读
 
 ---
 

@@ -1,12 +1,11 @@
 ---
 layout: post
-title:  "系统启动到activity"
+title:  "android系统启动到activity"
 date:   2016-07-30 20:30:00
 catalog:  true
 tags:
-    - android
-    - 组件系列
-    
+    - android组件源码阅读
+       
 
 ---
 

@@ -1,11 +1,10 @@
 ---
 layout: post
-title:  "Jvm系列2—Class文件格式"
+title:  "Jvm系列—Class文件格式"
 date:   2015-10-18 10:16:10
 catalog:  true
 tags:
-    - java
-    - jvm
+    - android组件介绍
 
 ---
 
