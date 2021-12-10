@@ -1,6 +1,6 @@
 ---
 layout:     post
-title:      android插件的理分析
+title:      android插件的原理分析和简单实现
 subtitle:   
 date:       2019-04-21
 author:     Jambooid
