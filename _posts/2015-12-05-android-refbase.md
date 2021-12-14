@@ -67,7 +67,7 @@ private:
 
 ### 1.2 关系图
 
-![Refbase_class](https://s2.loli.net/2021/12/09/wQ3uHoPKZcd1ARq.jpg)
+![Refbase_class](https://s2.loli.net/2021/12/14/WNTuYnzHxi3ISpQ.png)
 
 ## 二. 源码分析
 
