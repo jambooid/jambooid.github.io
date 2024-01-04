@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "理解ContentProvider原理"
+title:  "Android媒体：ContentProvider原理"
 date:   2016-07-30 20:30:00
 catalog:  true
 tags:
